@@ -6,6 +6,7 @@ VBufferCollectionTest : UnitTest {
 
 		this.assert(collection.buffers.every {|buffer| buffer.class == Buffer});
 		this.assert(collection.buffers.size == 4);
+		this.assert(collection.views.size == 4);
 	}
 
 	test_newLoadDirectory {
@@ -34,7 +35,7 @@ VBufferCollectionTest : UnitTest {
 }
 
 VBufferCollection {
-	var <buffers;
+	var <buffers, views;
 
 	*new { |server, numBuffersOrPaths, numFrames=0, numChannels=1|
 		^super.new.init(server, numBuffersOrPaths, numFrames, numChannels);
@@ -63,5 +64,35 @@ VBufferCollection {
 				Buffer.alloc(server, numFrames, numChannels);
 			}
 		};
+	}
+
+	// we want to lazily initialize those
+	views { |parent|
+		views = this.prMakeViews(parent);
+
+		^views;
+	}
+
+	prMakeViews { |parent|
+		^buffers.collect { |buffer|
+			var view = BufferSoundFileView.new(parent, nil, buffer);
+			buffer.getToFloatArray(action: { |samples|
+				{
+					view.setData(samples);
+					view.refresh;
+				}.defer;
+			});
+
+			view;
+		}
+	}
+}
+
+BufferSoundFileView : SoundFileView {
+	var buffer;
+	
+	*new { |parent, bounds, buffer|
+		buffer = buffer;
+		^super.new(parent, bounds);
 	}
 }
