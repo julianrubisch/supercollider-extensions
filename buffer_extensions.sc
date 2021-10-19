@@ -50,18 +50,18 @@ VBufferCollection {
 				// Buffer.read(server, path.fullPath);
 
 				// TODO try to monofy in place
-				RecEnhancedBuffer.readChannel(server, path.fullPath, channels: [0])
+				ViewEnhancedBuffer.readChannel(server, path.fullPath, channels: [0])
 			});
 		}
 		{numBuffersOrPaths.isArray && {numBuffersOrPaths.every { |path| path.class == PathName && path.isFile }}} {
 			// is an array of file paths
 			numBuffersOrPaths.collect { |path|
-				RecEnhancedBuffer.read(server, path)
+				ViewEnhancedBuffer.read(server, path)
 			}	
 		}
 		{numBuffersOrPaths.isInteger} {
 			numBuffersOrPaths.collect {
-				RecEnhancedBuffer.alloc(server, numFrames, numChannels);
+				ViewEnhancedBuffer.alloc(server, numFrames, numChannels);
 			}
 		};
 	}
@@ -75,7 +75,7 @@ VBufferCollection {
 
 	prMakeViews { |parent|
 		^buffers.collect { |buffer|
-			BufferSoundFileView.new(parent, nil, buffer);
+			buffer.view(parent);
 		}
 	}
 }
@@ -96,6 +96,15 @@ BufferSoundFileView : SoundFileView {
 				this.refresh;
 			}.defer;
 		});	
+	}
+}
+
+ViewEnhancedBuffer : Buffer {
+	var view;
+
+	view { |parent|
+		view = BufferSoundFileView.new(parent, nil, this);
+		^view;
 	}
 }
 
