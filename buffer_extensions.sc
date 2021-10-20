@@ -94,7 +94,8 @@ BufferSoundFileView : SoundFileView {
 	init { |parent, bounds, buffer|
 		buffer = buffer;	
 
-		buffer.getToFloatArray(timeout: 30, action: { |samples|
+		// index, count, wait, timeout, action
+		buffer.getToFloatArray(0, -1, 0.01, 30, { |samples|
 			{
 				this.setData(samples);
 				this.refresh;
