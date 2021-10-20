@@ -108,8 +108,32 @@ ViewEnhancedBuffer : Buffer {
 	}
 }
 
-RecEnhancedBuffer : Buffer {
-	var recSynth, <>recEnd;
+BufferViewDecorator {
+	var wrapped, view;
+
+	*new { |wrapped|
+		^super.newCopyArgs(wrapped);
+	}
+
+	view { |parent|
+		view = BufferSoundFileView.new(parent, nil, wrapped);
+		^view;
+	}
+
+	respondsTo { |aSymbol|
+		^(super.respondsTo(aSymbol) || wrapped.respondsTo(aSymbol));
+	}
+
+	doesNotUnderstand { |selector ... args|
+        if(wrapped.respondsTo(selector)) {
+			^wrapped.performList(selector, args);
+        };
+		^this.superPerformList(\doesNotUnderstand, selector, args);
+    }
+}
+
+BufferRecorderDecorator {
+	var wrapped, recSynth, <>recEnd;
 
 	*registerDefs { |server|
 		SynthDef(\bufferRec, {
@@ -132,15 +156,30 @@ RecEnhancedBuffer : Buffer {
 			// ~rec_end[bufnum] = msg[3];  // save ending frame index
 			// if(Pbindef(pattern_key).isPlaying, { Pbindef(pattern_key, \end, ~rec_end[bufnum]) })
 			// callback?
-			server.cachedBufferAt(bufnum).recEnd = msg[3];
+			// server.cachedBufferAt(bufnum).recEnd = msg[3];
 		}, '/bufferRecEnded', server.addr);
 	}
 
+	*new { |wrapped|
+		^super.newCopyArgs(wrapped);
+	}
+
 	startRec {
-		recSynth = Synth(\bufferRec, [\bufnum, this.bufnum]);
+		recSynth = Synth(\bufferRec, [\bufnum, wrapped.bufnum]);
 	}
 
 	stopRec {
 		recSynth.set(\rec, 0);
 	}
+
+	respondsTo { |aSymbol|
+		^(super.respondsTo(aSymbol) || wrapped.respondsTo(aSymbol));
+	}
+
+	doesNotUnderstand { |selector ... args|
+        if(wrapped.respondsTo(selector)) {
+			^wrapped.performList(selector, args);
+        };
+		^this.superPerformList(\doesNotUnderstand, selector, args);
+    }
 }
