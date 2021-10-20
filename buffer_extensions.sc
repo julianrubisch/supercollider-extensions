@@ -4,7 +4,7 @@ VBufferCollectionTest : UnitTest {
 
 		collection = VBufferCollection.new(server, 4, 44100);
 
-		this.assert(collection.buffers.every {|buffer| buffer.class == RecEnhancedBuffer});
+		this.assert(collection.buffers.every {|buffer| buffer.class == BufferViewDecorator});
 		this.assert(collection.buffers.size == 4);
 		this.assert(collection.views.size == 4);
 	}
@@ -18,7 +18,7 @@ VBufferCollectionTest : UnitTest {
 
 		collection = VBufferCollection.new(server, path, 44100, 1);
 
-		this.assert(collection.buffers.every {|buffer| buffer.class == RecEnhancedBuffer});
+		this.assert(collection.buffers.every {|buffer| buffer.class == BufferViewDecorator});
 	}
 
 	test_newLoadFiles {
@@ -30,7 +30,7 @@ VBufferCollectionTest : UnitTest {
 
 		collection = VBufferCollection.new(server, paths, 44100, 1);
 
-		this.assert(collection.buffers.every {|buffer| buffer.class == RecEnhancedBuffer});
+		this.assert(collection.buffers.every {|buffer| buffer.class == BufferViewDecorator});
 	}
 }
 
@@ -50,20 +50,24 @@ VBufferCollection {
 				// Buffer.read(server, path.fullPath);
 
 				// TODO try to monofy in place
-				ViewEnhancedBuffer.readChannel(server, path.fullPath, channels: [0])
+				Buffer.readChannel(server, path.fullPath, channels: [0]);
 			});
 		}
 		{numBuffersOrPaths.isArray && {numBuffersOrPaths.every { |path| path.class == PathName && path.isFile }}} {
 			// is an array of file paths
 			numBuffersOrPaths.collect { |path|
-				ViewEnhancedBuffer.read(server, path)
+				Buffer.read(server, path)
 			}	
 		}
 		{numBuffersOrPaths.isInteger} {
 			numBuffersOrPaths.collect {
-				ViewEnhancedBuffer.alloc(server, numFrames, numChannels);
+				Buffer.alloc(server, numFrames, numChannels);
 			}
 		};
+
+		buffers = buffers.collect { |buffer|
+			BufferViewDecorator.new(BufferRecorderDecorator.new(buffer));
+		}
 	}
 
 	// we want to lazily initialize those
@@ -96,15 +100,6 @@ BufferSoundFileView : SoundFileView {
 				this.refresh;
 			}.defer;
 		});	
-	}
-}
-
-ViewEnhancedBuffer : Buffer {
-	var view;
-
-	view { |parent|
-		view = BufferSoundFileView.new(parent, nil, this);
-		^view;
 	}
 }
 
