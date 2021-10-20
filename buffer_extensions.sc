@@ -108,16 +108,11 @@ ViewEnhancedBuffer : Buffer {
 	}
 }
 
-BufferViewDecorator {
-	var wrapped, view;
+Delegator {
+	var wrapped;
 
 	*new { |wrapped|
 		^super.newCopyArgs(wrapped);
-	}
-
-	view { |parent|
-		view = BufferSoundFileView.new(parent, nil, wrapped);
-		^view;
 	}
 
 	respondsTo { |aSymbol|
@@ -132,8 +127,17 @@ BufferViewDecorator {
     }
 }
 
-BufferRecorderDecorator {
-	var wrapped, recSynth, <>recEnd;
+BufferViewDecorator : Delegator {
+	var view;
+
+	view { |parent|
+		view = BufferSoundFileView.new(parent, nil, wrapped);
+		^view;
+	}
+}
+
+BufferRecorderDecorator : Delegator {
+	var recSynth, <>recEnd;
 
 	*registerDefs { |server|
 		SynthDef(\bufferRec, {
@@ -160,10 +164,6 @@ BufferRecorderDecorator {
 		}, '/bufferRecEnded', server.addr);
 	}
 
-	*new { |wrapped|
-		^super.newCopyArgs(wrapped);
-	}
-
 	startRec {
 		recSynth = Synth(\bufferRec, [\bufnum, wrapped.bufnum]);
 	}
@@ -171,15 +171,4 @@ BufferRecorderDecorator {
 	stopRec {
 		recSynth.set(\rec, 0);
 	}
-
-	respondsTo { |aSymbol|
-		^(super.respondsTo(aSymbol) || wrapped.respondsTo(aSymbol));
-	}
-
-	doesNotUnderstand { |selector ... args|
-        if(wrapped.respondsTo(selector)) {
-			^wrapped.performList(selector, args);
-        };
-		^this.superPerformList(\doesNotUnderstand, selector, args);
-    }
 }
