@@ -94,10 +94,14 @@ BufferSoundFileView : SoundFileView {
 	init { |parent, bounds, buffer|
 		buffer = buffer;	
 
+		// TODO how to inject server (.sampleRate)?
+		this.alloc(buffer.numFrames);
+
 		// index, count, wait, timeout, action
 		buffer.getToFloatArray(0, -1, 0.01, 30, { |samples|
 			{
 				this.setData(samples);
+				this.setSelection(0, [0, samples.size - 1]);
 				this.refresh;
 			}.defer;
 		});	
@@ -127,7 +131,9 @@ BufferViewDecorator : Delegator {
 	var view;
 
 	view { |parent|
-		view = BufferSoundFileView.new(parent, nil, wrapped);
+		if(view.isNil) {
+			view = BufferSoundFileView.new(parent, nil, wrapped);
+		}
 		^view;
 	}
 }
