@@ -4,7 +4,7 @@ VBufferCollectionTest : UnitTest {
 
 		collection = VBufferCollection.new(server, 4, 44100);
 
-		this.assert(collection.buffers.every {|buffer| buffer.class == BufferViewDecorator});
+		this.assert(collection.buffers.every {|buffer| buffer.class == AttributesDecorator});
 		this.assert(collection.buffers.size == 4);
 		this.assert(collection.views.size == 4);
 	}
@@ -18,7 +18,7 @@ VBufferCollectionTest : UnitTest {
 
 		collection = VBufferCollection.new(server, path, 44100, 1);
 
-		this.assert(collection.buffers.every {|buffer| buffer.class == BufferViewDecorator});
+		this.assert(collection.buffers.every {|buffer| buffer.class == AttributesDecorator});
 	}
 
 	test_newLoadFiles {
@@ -30,7 +30,7 @@ VBufferCollectionTest : UnitTest {
 
 		collection = VBufferCollection.new(server, paths, 44100, 1);
 
-		this.assert(collection.buffers.every {|buffer| buffer.class == BufferViewDecorator});
+		this.assert(collection.buffers.every {|buffer| buffer.class == AttributesDecorator});
 	}
 }
 
@@ -66,7 +66,7 @@ VBufferCollection {
 		};
 
 		buffers = buffers.collect { |buffer|
-			BufferViewDecorator.new(BufferRecorderDecorator.new(buffer));
+			AttributesDecorator.new(BufferViewDecorator.new(BufferRecorderDecorator.new(buffer)));
 		}
 	}
 
